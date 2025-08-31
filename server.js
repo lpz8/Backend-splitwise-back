@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -7,19 +6,18 @@ import User from "./models/User.js";
 import Expense from "./models/Expense.js";
 
 dotenv.config();
-const app = express();
 
+const app = express();
 app.use(cors());
 app.use(express.json());
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/gestor_gastos";
-mongoose.connect(MONGO_URI).then(() => {
-  console.log("✅ Conectado a Mongo");
-}).catch(err => {
-  console.error("❌ Error Mongo:", err.message);
-});
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log("✅ Conectado a Mongo"))
+  .catch(err => console.error("❌ Error Mongo:", err.message));
 
-app.get("/users", async (req, res) => {
+app.get("/users", async (_req, res) => {
   const users = await User.find().sort({ name: 1 });
   res.json(users);
 });
@@ -35,7 +33,7 @@ app.post("/users", async (req, res) => {
   }
 });
 
-app.get("/expenses", async (req, res) => {
+app.get("/expenses", async (_req, res) => {
   const expenses = await Expense.find()
     .sort({ date: -1, createdAt: -1 })
     .populate("paidBy", "name email")
@@ -64,7 +62,7 @@ app.post("/expenses", async (req, res) => {
     const exp = await Expense.create({ title, amount, paidBy, participants, date, description });
     const populated = await exp.populate([
       { path: "paidBy", select: "name email" },
-      { path: "participants", select: "name email" }
+      { path: "participants", select: "name email" },
     ]);
     res.status(201).json(populated);
   } catch (e) {
@@ -79,7 +77,9 @@ app.put("/expenses/:id", async (req, res) => {
       req.params.id,
       { title, amount, paidBy, participants, date, description },
       { new: true, runValidators: true }
-    ).populate("paidBy", "name email").populate("participants", "name email");
+    )
+      .populate("paidBy", "name email")
+      .populate("participants", "name email");
     if (!updated) return res.status(404).json({ error: "No existe" });
     res.json(updated);
   } catch (e) {
@@ -87,15 +87,5 @@ app.put("/expenses/:id", async (req, res) => {
   }
 });
 
-app.delete("/expenses/:id", async (req, res) => {
-  try {
-    const deleted = await Expense.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: "No existe" });
-    res.json({ ok: true });
-  } catch {
-    res.status(400).json({ error: "ID inválido" });
-  }
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Backend en http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Backend en http://localhost:${PORT}`));
