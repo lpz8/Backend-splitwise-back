@@ -8,14 +8,33 @@ import Expense from "./models/Expense.js";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+const ORIGINS =
+  (process.env.CORS_ORIGIN || "*")
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean);
+
+function corsOrigin(origin, callback) {
+  if (!origin || ORIGINS.includes("*")) return callback(null, true);
+  if (ORIGINS.includes(origin)) return callback(null, true);
+  return callback(new Error("No permitido por CORS: " + origin));
+}
+
+app.use(cors({
+  origin: corsOrigin,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+app.options("*", cors());
+
 app.use(express.json());
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/gestor_gastos";
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log("✅ Conectado a Mongo"))
-  .catch(err => console.error("❌ Error Mongo:", err.message));
+  .then(() => console.log("Conectado a Mongo"))
+  .catch(err => console.error("Error Mongo:", err.message));
 
 app.get("/users", async (_req, res) => {
   const users = await User.find().sort({ name: 1 });
@@ -88,4 +107,25 @@ app.put("/expenses/:id", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Backend en http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Backend en http://localhost:${PORT}`));
+
+const allowed = (process.env.CORS_ORIGIN || '').split(',').map(s=>s.trim()).filter(Boolean);
+app.use(cors({
+  origin: allowed.length ? allowed : true,
+  credentials: true
+}));
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://frontend-splitwise-back.netlify.app"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("No permitido por CORS"));
+    }
+  }
+}));

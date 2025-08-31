@@ -166,6 +166,10 @@ MONGO_URI=mongodb+srv://sergio:xxx@cluster0.xxxxx.mongodb.net/gestor-gastos
 - `PORT=3000`
 - `MONGO_URI=<tu cadena Atlas>`
 
+**Netlifi + Render**
+    Añadida la variable de entorno VITE_BACKEND_URL en Netlify apuntando al backend en Render.
+	•	Redeploy del sitio en Netlify usando Trigger deploy → Deploy site para aplicar los cambios.
+
 ---
 
 ## 🛠️ Problemas reales que me salieron y cómo los arreglé
